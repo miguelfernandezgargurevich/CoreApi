@@ -1,0 +1,13 @@
+bin
+.vs
+bin
+obj
+.vscode
+.DS_Store
+appsettings.json
+appsettings.Development.json
+*.db
+*.sln
+*.csproj.user
+wwwroot
+Properties/launchSettings.json
