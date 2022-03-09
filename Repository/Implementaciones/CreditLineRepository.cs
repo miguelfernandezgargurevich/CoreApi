@@ -22,6 +22,8 @@ namespace CoreApi.Repository.Implementaciones
         private readonly IConfiguration _configuration;
         private readonly ILogger<CreditLineRepository> _logger;
         private readonly IWebHostEnvironment _webHostEnvironment;
+        int maxNumbersRequest = 3;
+        int maxTotalMinutesRequest = 2;
 
         public CreditLineRepository(IConfiguration configuration, ILogger<CreditLineRepository> logger, IWebHostEnvironment webHostEnvironment)
         {
@@ -35,6 +37,7 @@ namespace CoreApi.Repository.Implementaciones
         public RespuestaBE ProcesarLineaCredito(CreditLineBE creditLineBE)
         {
             RespuestaBE respuestaBE = new RespuestaBE();
+            
 
             try
             { 
@@ -66,37 +69,40 @@ namespace CoreApi.Repository.Implementaciones
 
                     if (ValidAcceptedRequest(lastRequestNumbers, timeRequest, respuestaBE) == false)
                         return respuestaBE;
-                    else if (lastRequestNumbers > 3 && timeRequest.TotalMinutes > 2)
-                        lastRequestNumbers = 1;
+                    else if (lastRequestNumbers >= maxNumbersRequest && timeRequest.TotalMinutes > maxTotalMinutesRequest)
+                        lastRequestNumbers = ResetRequestNumbers();
 
-                    creditLineBE.recommendedCreditLine = Math.Round(recommendedCreditLine, 2);
-                    creditLineBE.requestAccepted = accepted.ToString();
-                    creditLineBE.requestNumbers = lastRequestNumbers;
-
-                    //guardar Request
-                    GuardarTrama(creditLineBE);
-
+                    var crediLine = Math.Round(recommendedCreditLine, 2);
+                    string msg = "Credit line authorized: " + crediLine.ToString();
                     respuestaBE.code = "1";
                     respuestaBE.status = StatusCodes.Status200OK;
                     respuestaBE.retornoBool = true;
                     respuestaBE.message = "Acepted";
-                    respuestaBE.messageDetail = "Credit line authorized: " + creditLineBE.recommendedCreditLine.ToString();
+                    respuestaBE.messageDetail = msg;
 
+                    creditLineBE.recommendedCreditLine = crediLine;
+                    creditLineBE.requestAccepted = accepted.ToString();
+                    creditLineBE.requestNumbers = lastRequestNumbers;
+                    creditLineBE.requestMessage = msg;
+                    //guardar Request
+                    GuardarTrama(creditLineBE);
                 }
                 else
                 {
                     if (lastRequestAccepted == true)
-                        lastRequestNumbers = 1;
-
-                    creditLineBE.recommendedCreditLine = Math.Round(recommendedCreditLine, 2);
-                    creditLineBE.requestAccepted = accepted.ToString();
-                    creditLineBE.requestNumbers = lastRequestNumbers;
-
-                    //guardar Request
-                    GuardarTrama(creditLineBE);
+                        lastRequestNumbers = ResetRequestNumbers();
 
                     ValidRejectedRequest(lastRequestAccepted, lastRequestNumbers, respuestaBE);
 
+                    var crediLine = Math.Round(recommendedCreditLine, 2);
+                    string msg = respuestaBE.messageDetail;
+                    creditLineBE.recommendedCreditLine = crediLine;
+                    creditLineBE.requestAccepted = accepted.ToString();
+                    creditLineBE.requestNumbers = lastRequestNumbers;
+                    creditLineBE.requestMessage = msg;
+
+                    //guardar Request
+                    GuardarTrama(creditLineBE);
                 }
 
                 return respuestaBE;
@@ -116,10 +122,15 @@ namespace CoreApi.Repository.Implementaciones
             }
         }
 
+        private int ResetRequestNumbers()
+        {
+            return 1;
+        }
+
         private void ValidRejectedRequest(bool lastRequestAccepted, int lastRequestNumbers, RespuestaBE respuestaBE)
         {
             //After failing 3 times, return the message "A sales agent will contact you".
-            if (lastRequestAccepted == false && lastRequestNumbers >= 3)
+            if (lastRequestAccepted == false && lastRequestNumbers > 3)
             {
                 respuestaBE.code = "-101";
                 respuestaBE.status = StatusCodes.Status200OK;
@@ -141,7 +152,7 @@ namespace CoreApi.Repository.Implementaciones
         private bool ValidAcceptedRequest(int lastRequestNumbers, TimeSpan timeRequest, RespuestaBE respuestaBE)
         {
             //If the system receives 3 or more requests within two minutes, return the http code 429.
-            if (lastRequestNumbers > 3 && timeRequest.TotalMinutes <= 2)
+            if (lastRequestNumbers >= maxNumbersRequest && timeRequest.TotalMinutes <= maxTotalMinutesRequest)
             {
                 respuestaBE.code = "-102";
                 respuestaBE.status = StatusCodes.Status429TooManyRequests;

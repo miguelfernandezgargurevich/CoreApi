@@ -14,6 +14,7 @@ namespace CoreApi.Entidades
         public string requestedDate { get; set; }
         public double? recommendedCreditLine { get; set; }
         public string requestAccepted { get; set; }
+        public string requestMessage { get; set; }
         public Int32? requestNumbers { get; set; }
 
 
