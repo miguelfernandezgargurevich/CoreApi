@@ -11,8 +11,7 @@ your application
 
 ## Instruction
 - Download the code from GIT Repository: https://github.com/miguelgargurevich/CoreApi.git
-- Publish files: bin\Release\netcoreapp3.1\publish\
-  or Run the aplication using Visual Studio 2019
+- Publish files: "bin\Release\netcoreapp3.1\publish\" or Run the aplication using Visual Studio 2019
 
 - URL test using IIS Express
   SSL: https://localhost:44350/
