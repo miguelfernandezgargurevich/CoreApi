@@ -44,7 +44,7 @@ namespace CoreApi.Controllers
         }
 
 
-        #region "Metodos o procedimientos del SIEWEB"
+        #region "Metodos o procedimientos"
         [Route("procesar")]
         [HttpPost]
         public IActionResult procesarLineaCredito([FromBody] CreditLineBE creditLineBE)
